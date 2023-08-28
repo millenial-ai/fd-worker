@@ -1,0 +1,65 @@
+# Compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Logs and temporary files
+*.log
+*.swp
+*.tmp
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+*.egg-info/
+*.dmg
+*.exe
+*.log
+*.out
+*.pyz
+*.whl
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Miscellaneous
+*.db
+*.sqlite3
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+*.gz
+*.tar
+*.zip
+*.xlsx
+*.xls
+
+# Configuration files
+*.env
+*.ini
+*.env.local
+.env.*
+
+# Ignore your local configuration files if they contain sensitive information
+config.yml
+
+# Ignore any secrets or sensitive information
+secrets.json
+secrets.yaml
