@@ -36,10 +36,19 @@ while True:
             receipt_handle = message['ReceiptHandle']
             
             from utils.processor import RCFProcessor, XGBProcessor
-            from utils.message import PCARequestMessage
+            from utils.message import PCARequestMessage, BasicInfoRequestMessage
             
-            msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
-            
+            # msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
+            body_json = eval(message['Body'])
+            msg = BasicInfoRequestMessage(
+                identifier=body_json['identifier'], 
+                amt=body_json['amt'],
+                lat=body_json['lat'],
+                lng=body_json['lng'],
+                city_pop=body_json['city_pop'],
+                merch_lat=body_json['merch_lat'],
+                merch_lng=body_json['merch_lng']
+            )
             rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
             rcf_result = rcf_processor.process(msg)
             print("RCF Result", rcf_result)

@@ -45,9 +45,13 @@ class SageMakerProcessor():
         raise Exception("Not implemented")
 
 
-def rcf_preprocess(message: Message):
+
+def rcf_pca_preprocess(message: Message):
     return json.dumps({"instances": [{"data": {"features": {"values": message.values}}}]})
-    
+
+def rcf_preprocess(message: Message):
+    return json.dumps({"instances": [{"data": {"features": {"values": [message.amt, message.lat, message.lng, message.city_pop, message.merch_lat, message.merch_lng]}}}]})
+
 def rcf_postprocess(response):
     return response["scores"][0]["score"]
     
@@ -74,9 +78,12 @@ class RCFProcessor(SageMakerProcessor):
         response_body = response['Body'].read().decode()
         return json.loads(response_body)
 
-def xgb_preprocess(message: Message):
+def xgb_pca_preprocess(message: Message):
     return ','.join([str(v) for v in message.values])
-    
+
+def xgb_preprocess(message: Message):
+    return [message.amt, message.lat, message.lng, message.city_pop, message.merch_lat, message.merch_lng]
+
 def xgb_postprocess(response):
     return response
 

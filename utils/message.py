@@ -8,6 +8,15 @@ class Message:
 @dataclass
 class PCARequestMessage(Message):
     values: List[float]
+
+@dataclass
+class BasicInfoRequestMessage(Message):
+    amt: float
+    lat: float
+    lng: float
+    city_pop: float
+    merch_lat: float
+    merch_lng: float
     
 @dataclass
 class OutputMessage(Message):
