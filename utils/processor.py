@@ -82,7 +82,8 @@ def xgb_pca_preprocess(message: Message):
     return ','.join([str(v) for v in message.values])
 
 def xgb_preprocess(message: Message):
-    return [message.amt, message.lat, message.lng, message.city_pop, message.merch_lat, message.merch_lng]
+    feature_vector = [message.amt, message.lat, message.lng, message.city_pop, message.merch_lat, message.merch_lng]
+    return ','.join([str(v) for v in feature_vector])
 
 def xgb_postprocess(response):
     return response
