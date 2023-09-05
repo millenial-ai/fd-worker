@@ -1,6 +1,6 @@
 import boto3
 import os
-from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name
+from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_transaction_confirmation_mail
 
 # Read AWS credentials from environment variables or AWS CLI configuration
 session = boto3.Session()
@@ -47,7 +47,11 @@ while True:
                 lng=body_json['lng'],
                 city_pop=body_json['city_pop'],
                 merch_lat=body_json['merch_lat'],
-                merch_lng=body_json['merch_lng']
+                merch_lng=body_json['merch_lng'],
+                merch_name=body_json['merch_name'],
+                tx_name=body_json['tx_name'],
+                tx_date=body_json['tx_date'],
+                tx_ending=body_json['tx_ending']
             )
             rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
             rcf_result = rcf_processor.process(msg)
@@ -63,11 +67,20 @@ while True:
             message = "There has been a recent activity in your transaction. Here is the detail of our fraud detection model:\n"
             message += f"XGB: {xgb_result.result}\n"
             message += f"RCF: {rcf_result.result}"
+
+            ses_send_transaction_confirmation_mail(
+                msg=msg,
+                recipient_email="caohoangtung2001@gmail.com",
+                tx_link_accept='https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=accept transaction',
+                tx_link_decline='https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=reject transaction',
+                xgb_result=xgb_result.result,
+                rcf_result=rcf_result.result
+            )
             
             # Publish the message to the SNS topic
-            response = sns.publish(TopicArn=topic_arn, Message=message)
+            # response = sns.publish(TopicArn=topic_arn, Message=message)
             
-            print("Message published:", response['MessageId'])
+            print("Message published:", response)
 
     else:
         print("No messages available")

@@ -17,6 +17,10 @@ class BasicInfoRequestMessage(Message):
     city_pop: float
     merch_lat: float
     merch_lng: float
+    merch_name: str
+    tx_name: str
+    tx_date: str
+    tx_ending: str
     
 @dataclass
 class OutputMessage(Message):

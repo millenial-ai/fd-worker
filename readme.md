@@ -14,3 +14,8 @@ curl -X POST \
     }}' \
      https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/fraud/check
 ```
+
+sudo yum install python3 python3-pip
+pip install git-remote-codecommit
+
+git clone codecommit::us-east-1://fd-worker
