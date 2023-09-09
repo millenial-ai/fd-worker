@@ -3,6 +3,8 @@ import json
 from abc import ABC, abstractmethod
 from typing import Callable, Union
 from .message import Message, OutputMessage
+from .transform import transform_message
+from dataclasses import asdict
 
 class SageMakerProcessor():
     """
@@ -82,7 +84,28 @@ def xgb_pca_preprocess(message: Message):
     return ','.join([str(v) for v in message.values])
 
 def xgb_preprocess(message: Message):
-    feature_vector = [message.amt, message.lat, message.lng, message.city_pop, message.merch_lat, message.merch_lng]
+    print("processing", message)
+    print("TRANSFORMING")
+    transformed_message = transform_message(message)
+    dict_message = asdict(transformed_message)
+    print('dict_message', dict_message)
+
+    feature_vector = [
+        transformed_message.amt, 
+        transformed_message.lat, 
+        transformed_message.lng, 
+        transformed_message.city_pop, 
+        transformed_message.merch_lat, 
+        transformed_message.merch_lng,
+        transformed_message.age,
+        transformed_message.merchant,
+        transformed_message.category,
+        transformed_message.city,
+        transformed_message.state,
+        transformed_message.job,
+        transformed_message.part_of_day
+    ]
+    print('feature_vector', feature_vector)
     return ','.join([str(v) for v in feature_vector])
 
 def xgb_postprocess(response):

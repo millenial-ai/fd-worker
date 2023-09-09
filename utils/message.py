@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List, Union, Dict
+import json
 
 @dataclass
 class Message:
@@ -21,6 +22,14 @@ class BasicInfoRequestMessage(Message):
     tx_name: str
     tx_date: str
     tx_ending: str
+    merchant: str 
+    category: str
+    city: str
+    state: str
+    dob: str
+    job: str 
+    age: float = None
+    part_of_day: str = None
     
 @dataclass
 class OutputMessage(Message):

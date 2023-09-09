@@ -51,7 +51,13 @@ while True:
                 merch_name=body_json['merch_name'],
                 tx_name=body_json['tx_name'],
                 tx_date=body_json['tx_date'],
-                tx_ending=body_json['tx_ending']
+                tx_ending=body_json['tx_ending'],
+                merchant=body_json['merchant'], 
+                category=body_json['category'],
+                city=body_json['city'],
+                state=body_json['state'],
+                dob=body_json['dob'],
+                job=body_json['job'],
             )
             rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
             rcf_result = rcf_processor.process(msg)
