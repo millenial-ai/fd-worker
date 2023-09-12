@@ -75,5 +75,3 @@ def ses_send_transaction_confirmation_mail(
             }
         )
         print("Email sent successfully!")
-        print(response)
-        

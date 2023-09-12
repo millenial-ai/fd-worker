@@ -33,5 +33,5 @@ class BasicInfoRequestMessage(Message):
     
 @dataclass
 class OutputMessage(Message):
-    result: Dict
+    result: float
     msg: str = ""

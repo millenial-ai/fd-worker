@@ -84,11 +84,8 @@ def xgb_pca_preprocess(message: Message):
     return ','.join([str(v) for v in message.values])
 
 def xgb_preprocess(message: Message):
-    print("processing", message)
-    print("TRANSFORMING")
     transformed_message = transform_message(message)
     dict_message = asdict(transformed_message)
-    print('dict_message', dict_message)
 
     feature_vector = [
         transformed_message.amt, 
@@ -105,11 +102,14 @@ def xgb_preprocess(message: Message):
         transformed_message.job,
         transformed_message.part_of_day
     ]
-    print('feature_vector', feature_vector)
     return ','.join([str(v) for v in feature_vector])
 
 def xgb_postprocess(response):
-    return response
+    try:
+        return float(response)
+    except Exception as e:
+        print(str(e))
+        return -1
 
 class XGBProcessor(SageMakerProcessor):
     def __init__(self,
