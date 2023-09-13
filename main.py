@@ -48,23 +48,24 @@ while True:
             # msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
             body_json = eval(message['Body'])
             msg = BasicInfoRequestMessage(
-                identifier=body_json['identifier'], 
-                amt=body_json['amt'],
-                lat=body_json['lat'],
-                lng=body_json['lng'],
-                city_pop=body_json['city_pop'],
-                merch_lat=body_json['merch_lat'],
-                merch_lng=body_json['merch_lng'],
-                merch_name=body_json['merch_name'],
-                tx_name=body_json['tx_name'],
-                tx_date=body_json['tx_date'],
-                tx_ending=body_json['tx_ending'],
-                merchant=body_json['merchant'], 
-                category=body_json['category'],
-                city=body_json['city'],
-                state=body_json['state'],
-                dob=body_json['dob'],
-                job=body_json['job'],
+                identifier=body_json.get('identifier'), 
+                amt=body_json.get('amt'),
+                lat=body_json.get('lat'),
+                lng=body_json.get('lng'),
+                city_pop=body_json.get('city_pop'),
+                merch_lat=body_json.get('merch_lat'),
+                merch_lng=body_json.get('merch_lng'),
+                merch_name=body_json.get('merch_name'),
+                tx_name=body_json.get('tx_name'),
+                tx_date=body_json.get('tx_date'),
+                tx_ending=body_json.get('tx_ending'),
+                merchant=body_json.get('merchant'), 
+                category=body_json.get('category'),
+                city=body_json.get('city'),
+                state=body_json.get('state'),
+                dob=body_json.get('dob'),
+                job=body_json.get('job'),
+                recipient_email=body_json.get('recipient_email', 'caohoangtung2001@gmail.com')
             )
             rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
             rcf_result = rcf_processor.process(msg)
@@ -73,14 +74,15 @@ while True:
             xgb_processor = XGBProcessor(endpoint_name=XGB_ENDPOINT, content_type='text/csv')
             xgb_result = xgb_processor.process(msg)
             print("XGB Result", xgb_result)
-            
+
             sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
             
+            
             if should_send_mail(xgb_result):
-                print("Mail is being sent")
+                print("Mail is being sent to", msg.recipient_email)
                 ses_send_transaction_confirmation_mail(
                     msg=msg,
-                    recipient_email="caohoangtung2001@gmail.com",
+                    recipient_email=msg.recipient_email,
                     tx_link_accept='https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=accept transaction',
                     tx_link_decline='https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=reject transaction',
                     xgb_result=xgb_result.result,

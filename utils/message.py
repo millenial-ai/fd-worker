@@ -30,6 +30,7 @@ class BasicInfoRequestMessage(Message):
     job: str 
     age: float = None
     part_of_day: str = None
+    recipient_email: str = None
     
 @dataclass
 class OutputMessage(Message):
