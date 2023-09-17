@@ -52,8 +52,19 @@ def rcf_pca_preprocess(message: Message):
     return json.dumps({"instances": [{"data": {"features": {"values": message.values}}}]})
 
 def rcf_preprocess(message: Message):
-    return json.dumps({"instances": [{"data": {"features": {"values": [message.amt, message.lat, message.lng, message.city_pop, message.merch_lat, message.merch_lng]}}}]})
+    transformed_message = transform_message(message)
+    dict_message = asdict(transformed_message)
 
+    feature_vector = [
+        transformed_message.amt, 
+        transformed_message.lat, 
+        transformed_message.lng, 
+        transformed_message.city_pop, 
+        transformed_message.merch_lat, 
+        transformed_message.merch_lng
+    ]
+    return json.dumps({"instances": [{"data": {"features": {"values": feature_vector}}}]})
+    
 def rcf_postprocess(response):
     return response["scores"][0]["score"]
     

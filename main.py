@@ -86,8 +86,7 @@ while True:
             print("XGB Result", xgb_result)
 
             sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
-            
-            
+
             if should_block_transaction(xgb_result, rcf_result):
                 print("BLOCK Mail is being sent to", msg.recipient_email)
                 ses_send_transaction_blocked_mail(
