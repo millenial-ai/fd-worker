@@ -1,7 +1,7 @@
 import boto3
 import os
-from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_transaction_confirmation_mail
-from utils.CONST import XGB_FRAUD_THRESHOLD
+from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_transaction_confirmation_mail, ses_send_transaction_blocked_mail
+from utils.CONST import XGB_FRAUD_THRESHOLD, RCF_FRAUD_THRESHOLD
 
 # Read AWS credentials from environment variables or AWS CLI configuration
 session = boto3.Session()
@@ -23,9 +23,19 @@ sns = boto3.client('sns')
 
 def should_send_mail(
     xgb_result,
+    rcf_result,
     **kwargs
 ):
-    return xgb_result.result >= XGB_FRAUD_THRESHOLD
+    return xgb_result.result >= XGB_FRAUD_THRESHOLD or rcf_result.result >= RCF_FRAUD_THRESHOLD
+
+def should_block_transaction(
+    xgb_result,
+    rcf_result,
+    **kwargs
+):
+    return xgb_result.result >= XGB_FRAUD_THRESHOLD and rcf_result.result >= RCF_FRAUD_THRESHOLD
+
+
 
 while True:
     response = sqs.receive_message(
@@ -78,8 +88,16 @@ while True:
             sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
             
             
-            if should_send_mail(xgb_result):
-                print("Mail is being sent to", msg.recipient_email)
+            if should_block_transaction(xgb_result, rcf_result):
+                print("BLOCK Mail is being sent to", msg.recipient_email)
+                ses_send_transaction_blocked_mail(
+                    msg=msg,
+                    recipient_email=msg.recipient_email,
+                    xgb_result=xgb_result.result,
+                    rcf_result=rcf_result.result
+                )
+            elif should_send_mail(xgb_result, rcf_result):
+                print("YES/NO Mail is being sent to", msg.recipient_email)
                 ses_send_transaction_confirmation_mail(
                     msg=msg,
                     recipient_email=msg.recipient_email,

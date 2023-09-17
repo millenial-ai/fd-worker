@@ -36,6 +36,45 @@ def get_sqs_url_by_name(queue_name):
 def get_default_sender_email():
     return 'millennium.ai.agent@gmail.com'
 
+def ses_send_mail_template(
+    msg: Message,
+    recipient_email: str,
+    mail_template_path: str,
+    mail_title: str,
+    sender_email: str = get_default_sender_email(),
+    mail_body_extra_args: dict = {},
+    **kwargs
+):
+    with open(mail_template_path) as f_mail_template:
+        mail_template_str = f_mail_template.read()
+        mail_template = Template(mail_template_str)
+        print("extra args", kwargs.get('mail_body_extra_args', {}))
+        mail_body = mail_template.safe_substitute(
+            TX_ENDING=msg.tx_ending,
+            TX_NAME=msg.tx_name,
+            TX_MERCHANT=msg.merch_name,
+            TX_DATE=msg.tx_date,
+            TX_AMOUNT=msg.amt,
+            **mail_body_extra_args
+        )
+        try:
+            mail_body += f"<p>XGB: {kwargs.get('xgb_result')}</p>"
+            mail_body += f"<p>RCF: {kwargs.get('rcf_result')}</p>"
+        except:
+            pass
+        
+        response = ses.send_email(
+            Source=sender_email,
+            Destination={'ToAddresses': [recipient_email]},
+            Message={
+                'Subject': {'Data': mail_title},
+                'Body': {
+                    'Html': {'Data': mail_body}
+                }
+            }
+        )
+        print("Email sent successfully!")
+
 def ses_send_transaction_confirmation_mail(
         msg: Message,
         recipient_email: str,
@@ -45,33 +84,29 @@ def ses_send_transaction_confirmation_mail(
         mail_template_path: str = 'resource/mail_template/transaction_confirmation.html',
         **kwargs
     ):
+    ses_send_mail_template(
+        msg,
+        recipient_email,
+        mail_template_path,
+        mail_title='Transaction confirmation required',
+        mail_body_extra_args={
+            'TX_LINK_ACCEPT': tx_link_accept,
+            'TX_LINK_DECLINE': tx_link_decline
+        },
+        **kwargs
+    )
 
-    with open(mail_template_path) as f_mail_template:
-        mail_template_str = f_mail_template.read()
-        mail_template = Template(mail_template_str)
-        mail_body = mail_template.safe_substitute(
-            TX_ENDING=msg.tx_ending,
-            TX_NAME=msg.tx_name,
-            TX_MERCHANT=msg.merch_name,
-            TX_DATE=msg.tx_date,
-            TX_AMOUNT=msg.amt,
-            TX_LINK_ACCEPT=tx_link_accept,
-            TX_LINK_DECLINE=tx_link_decline
-        )
-        try:
-            message += f"XGB: {kwargs.get('xgb_result')}\n"
-            message += f"RCF: {kwargs.get('rcf_result')}"
-        except:
-            pass
-        
-        response = ses.send_email(
-            Source=sender_email,
-            Destination={'ToAddresses': [recipient_email]},
-            Message={
-                'Subject': {'Data': 'Transaction confirmation required'},
-                'Body': {
-                    'Html': {'Data': mail_body}
-                }
-            }
-        )
-        print("Email sent successfully!")
+def ses_send_transaction_blocked_mail(
+        msg: Message,
+        recipient_email: str,
+        sender_email: str = get_default_sender_email(),
+        mail_template_path: str = 'resource/mail_template/transaction_block_notice.html',
+        **kwargs
+    ):
+    ses_send_mail_template(
+        msg,
+        recipient_email,
+        mail_template_path,
+        mail_title='Transaction blocked',
+        **kwargs
+    )
