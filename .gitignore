@@ -65,3 +65,5 @@ config.yml
 # Ignore any secrets or sensitive information
 secrets.json
 secrets.yaml
+
+resource/bin

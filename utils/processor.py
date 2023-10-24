@@ -3,7 +3,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Callable, Union
 from .message import Message, OutputMessage
-from .transform import transform_message
+from .transform import transform_message_rcf, transform_message_xgb
 from dataclasses import asdict
 
 class SageMakerProcessor():
@@ -52,16 +52,16 @@ def rcf_pca_preprocess(message: Message):
     return json.dumps({"instances": [{"data": {"features": {"values": message.values}}}]})
 
 def rcf_preprocess(message: Message):
-    transformed_message = transform_message(message)
+    transformed_message = transform_message_rcf(message)
     dict_message = asdict(transformed_message)
 
     feature_vector = [
         transformed_message.amt, 
         transformed_message.lat, 
-        transformed_message.lng, 
+        transformed_message.long, 
         transformed_message.city_pop, 
         transformed_message.merch_lat, 
-        transformed_message.merch_lng
+        transformed_message.merch_long
     ]
     return json.dumps({"instances": [{"data": {"features": {"values": feature_vector}}}]})
     
@@ -95,16 +95,16 @@ def xgb_pca_preprocess(message: Message):
     return ','.join([str(v) for v in message.values])
 
 def xgb_preprocess(message: Message):
-    transformed_message = transform_message(message)
+    transformed_message = transform_message_xgb(message)
     dict_message = asdict(transformed_message)
 
     feature_vector = [
         transformed_message.amt, 
         transformed_message.lat, 
-        transformed_message.lng, 
+        transformed_message.long, 
         transformed_message.city_pop, 
         transformed_message.merch_lat, 
-        transformed_message.merch_lng,
+        transformed_message.merch_long,
         transformed_message.age,
         transformed_message.merchant,
         transformed_message.category,
