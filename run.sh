@@ -1,0 +1,1 @@
+export RCF_ENDPOINT=custom-nopca-datacamp-rcf && export XGB_ENDPOINT=custom-nopca-datacamp-xgbsmote && python main.py

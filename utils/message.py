@@ -14,10 +14,10 @@ class PCARequestMessage(Message):
 class BasicInfoRequestMessage(Message):
     amt: float
     lat: float
-    long: float
+    lng: float
     city_pop: float
     merch_lat: float
-    merch_long: float
+    merch_lng: float
     merch_name: str
     tx_name: str
     tx_date: str
