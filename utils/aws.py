@@ -3,6 +3,7 @@ import os
 import boto3
 from string import Template
 from .message import Message
+import json
 
 ses = boto3.client('ses')
 
@@ -35,6 +36,59 @@ def get_sqs_url_by_name(queue_name):
 
 def get_default_sender_email():
     return 'millennium.ai.agent@gmail.com'
+
+def create_ses_template(
+    template_name: str,
+    mail_subject: str,
+    mail_html: str
+):
+    template_data = {
+        'TemplateName': template_name,
+        'SubjectPart': mail_subject,
+        'HtmlPart': mail_html
+    }
+    try:
+        # Check if template already existed
+        template_existed = ses.get_template(TemplateName=template_name)
+        # Create the email template
+        response = ses.update_template(
+            Template=template_data
+        )
+    except Exception as e:
+        response = ses.create_template(
+            Template=template_data
+        )
+    
+    # Print the response
+    print(f"Email template created/updated. Template Name: {template_name}")
+
+def send_email_template(
+    sender_email: str,
+    recipient_email: str,
+    template_name: str
+):
+    # Define custom field values
+    template_data = {
+        'TX_ENDING':'msg.tx_ending',
+        'TX_NAME':'msg.tx_name',
+        'TX_MERCHANT':'msg.merch_name',
+        'TX_DATE':'msg.tx_date',
+        'TX_AMOUNT':'msg.amt',
+        'TX_LINK_ACCEPT': 'https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=accept transaction',
+        'TX_LINK_DECLINE': 'https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=reject transaction'
+    }
+    
+    # Send the email using the template
+    response = ses.send_templated_email(
+        Source=sender_email,
+        Destination={'ToAddresses': [recipient_email]},
+        Template=template_name,
+        TemplateData=json.dumps(template_data)
+    )
+    
+    # Print the response
+    print(f"Email sent. Message ID: {response['MessageId']}")
+
 
 def ses_send_mail_template(
     msg: Message,
@@ -84,16 +138,21 @@ def ses_send_transaction_confirmation_mail(
         mail_template_path: str = 'resource/mail_template/transaction_confirmation.html',
         **kwargs
     ):
-    ses_send_mail_template(
-        msg,
-        recipient_email,
-        mail_template_path,
-        mail_title='Transaction confirmation required',
-        mail_body_extra_args={
-            'TX_LINK_ACCEPT': tx_link_accept,
-            'TX_LINK_DECLINE': tx_link_decline
-        },
-        **kwargs
+    # ses_send_mail_template(
+    #     msg,
+    #     recipient_email,
+    #     mail_template_path,
+    #     mail_title='Transaction confirmation required',
+    #     mail_body_extra_args={
+    #         'TX_LINK_ACCEPT': tx_link_accept,
+    #         'TX_LINK_DECLINE': tx_link_decline
+    #     },
+    #     **kwargs
+    # )
+    send_email_template(
+        sender_email='millennium.ai.agent@gmail.com',
+        recipient_email='caohoangtung2001@gmail.com',
+        template_name='TransactionConfirmation'
     )
 
 def ses_send_transaction_blocked_mail(
@@ -103,10 +162,15 @@ def ses_send_transaction_blocked_mail(
         mail_template_path: str = 'resource/mail_template/transaction_block_notice.html',
         **kwargs
     ):
-    ses_send_mail_template(
-        msg,
-        recipient_email,
-        mail_template_path,
-        mail_title='Transaction blocked',
-        **kwargs
+    # ses_send_mail_template(
+    #     msg,
+    #     recipient_email,
+    #     mail_template_path,
+    #     mail_title='Transaction blocked',
+    #     **kwargs
+    # )
+    send_email_template(
+        sender_email=get_default_sender_email(),
+        recipient_email=recipient_email,
+        template_name='TransactionBlocked'
     )
