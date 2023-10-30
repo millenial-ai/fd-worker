@@ -62,18 +62,20 @@ def create_ses_template(
     # Print the response
     print(f"Email template created/updated. Template Name: {template_name}")
 
+
 def send_email_template(
     sender_email: str,
     recipient_email: str,
-    template_name: str
+    template_name: str,
+    msg: Message
 ):
     # Define custom field values
     template_data = {
-        'TX_ENDING':'msg.tx_ending',
-        'TX_NAME':'msg.tx_name',
-        'TX_MERCHANT':'msg.merch_name',
-        'TX_DATE':'msg.tx_date',
-        'TX_AMOUNT':'msg.amt',
+        'TX_ENDING':msg.tx_ending,
+        'TX_NAME':msg.tx_name,
+        'TX_MERCHANT':msg.merch_name,
+        'TX_DATE':msg.tx_date,
+        'TX_AMOUNT':msg.amt,
         'TX_LINK_ACCEPT': 'https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=accept transaction',
         'TX_LINK_DECLINE': 'https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=reject transaction'
     }
@@ -152,7 +154,8 @@ def ses_send_transaction_confirmation_mail(
     send_email_template(
         sender_email='millennium.ai.agent@gmail.com',
         recipient_email='caohoangtung2001@gmail.com',
-        template_name='TransactionConfirmation'
+        template_name='TransactionConfirmation',
+        msg=msg
     )
 
 def ses_send_transaction_blocked_mail(
@@ -172,5 +175,25 @@ def ses_send_transaction_blocked_mail(
     send_email_template(
         sender_email=get_default_sender_email(),
         recipient_email=recipient_email,
-        template_name='TransactionBlocked'
+        template_name='TransactionBlocked',
+        msg=msg
     )
+    
+    
+    # Using same html on purpose
+with open('resource/mail_template/transaction_confirmation.html') as f_block,\
+    open('resource/mail_template/transaction_confirmation.html') as f_confirm:
+    
+    blocked_mail_html, confirmation_mail_html = f_block.read(), f_confirm.read()
+    
+    create_ses_template(
+        template_name='TransactionBlocked',
+        mail_subject='Transaction blocked',
+        mail_html=blocked_mail_html
+    )
+    create_ses_template(
+        template_name='TransactionConfirmation',
+        mail_subject='Transaction confirmation required',
+        mail_html=confirmation_mail_html
+    )
+
