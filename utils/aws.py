@@ -178,22 +178,3 @@ def ses_send_transaction_blocked_mail(
         template_name='TransactionBlocked',
         msg=msg
     )
-    
-    
-    # Using same html on purpose
-with open('resource/mail_template/transaction_confirmation.html') as f_block,\
-    open('resource/mail_template/transaction_confirmation.html') as f_confirm:
-    
-    blocked_mail_html, confirmation_mail_html = f_block.read(), f_confirm.read()
-    
-    create_ses_template(
-        template_name='TransactionBlocked',
-        mail_subject='Transaction blocked',
-        mail_html=blocked_mail_html
-    )
-    create_ses_template(
-        template_name='TransactionConfirmation',
-        mail_subject='Transaction confirmation required',
-        mail_html=confirmation_mail_html
-    )
-

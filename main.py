@@ -2,6 +2,7 @@ import boto3
 import os
 from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_transaction_confirmation_mail, ses_send_transaction_blocked_mail
 from utils.CONST import XGB_FRAUD_THRESHOLD, RCF_FRAUD_THRESHOLD
+from utils.aws import create_ses_template
 
 # Read AWS credentials from environment variables or AWS CLI configuration
 session = boto3.Session()
@@ -34,6 +35,24 @@ def should_block_transaction(
     **kwargs
 ):
     return xgb_result.result >= XGB_FRAUD_THRESHOLD and rcf_result.result >= RCF_FRAUD_THRESHOLD
+
+
+# Using same html on purpose
+with open('resource/mail_template/transaction_confirmation.html') as f_block,\
+    open('resource/mail_template/transaction_confirmation.html') as f_confirm:
+    
+    blocked_mail_html, confirmation_mail_html = f_block.read(), f_confirm.read()
+    
+    create_ses_template(
+        template_name='TransactionBlocked',
+        mail_subject='Transaction blocked',
+        mail_html=blocked_mail_html
+    )
+    create_ses_template(
+        template_name='TransactionConfirmation',
+        mail_subject='Transaction confirmation required',
+        mail_html=confirmation_mail_html
+    )
 
 
 
