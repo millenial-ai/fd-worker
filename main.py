@@ -76,6 +76,8 @@ while True:
             
             # msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
             body_json = eval(message['Body'])
+            print("body_json", body_json)
+            print("body_json.get('recipient_email')", body_json.get('recipient_email'))
             msg = BasicInfoRequestMessage(
                 identifier=body_json.get('identifier'), 
                 amt=body_json.get('amt'),
@@ -94,7 +96,7 @@ while True:
                 state=body_json.get('state'),
                 dob=body_json.get('dob'),
                 job=body_json.get('job'),
-                recipient_email=body_json.get('recipient_email', 'caohoangtung2001@gmail.com')
+                recipient_email=body_json.get('recipient_email')
             )
             rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
             rcf_result = rcf_processor.process(msg)
