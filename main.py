@@ -121,8 +121,6 @@ while True:
                 ses_send_transaction_confirmation_mail(
                     msg=msg,
                     recipient_email=msg.recipient_email,
-                    tx_link_accept='https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=accept transaction',
-                    tx_link_decline='https://0m99smdcz1.execute-api.us-east-1.amazonaws.com/transaction/notify?message=reject transaction',
                     xgb_result=xgb_result.result,
                     rcf_result=rcf_result.result
                 )

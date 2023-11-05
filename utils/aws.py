@@ -134,10 +134,7 @@ def ses_send_mail_template(
 def ses_send_transaction_confirmation_mail(
         msg: Message,
         recipient_email: str,
-        tx_link_accept: str,
-        tx_link_decline: str,
         sender_email: str = get_default_sender_email(),
-        mail_template_path: str = 'resource/mail_template/transaction_confirmation.html',
         **kwargs
     ):
     # ses_send_mail_template(
@@ -152,7 +149,7 @@ def ses_send_transaction_confirmation_mail(
     #     **kwargs
     # )
     send_email_template(
-        sender_email='millennium.ai.agent@gmail.com',
+        sender_email=get_default_sender_email(),
         recipient_email=recipient_email,
         template_name='TransactionConfirmation',
         msg=msg
@@ -162,7 +159,6 @@ def ses_send_transaction_blocked_mail(
         msg: Message,
         recipient_email: str,
         sender_email: str = get_default_sender_email(),
-        mail_template_path: str = 'resource/mail_template/transaction_block_notice.html',
         **kwargs
     ):
     # ses_send_mail_template(
