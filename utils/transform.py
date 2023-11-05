@@ -73,30 +73,31 @@ def transform_message(
     
     return BasicInfoRequestMessage(**dict_message)
 
-"""
-Transform numerical data for RCF algorithm
-"""
-def transform_message_rcf(
-    message: BasicInfoRequestMessage,
-    features_encoders=features_encoders,
-    numeric_scaler=numeric_scaler
-):
-    dict_message = asdict(message)
-    sample_vector = [
-        dict_message['amt'],
-        dict_message['lat'],
-        dict_message['long'],
-        dict_message['city_pop'],
-        dict_message['merch_lat'],
-        dict_message['merch_long']
-    ]
+# """
+# Transform numerical data for RCF algorithm
+# """
+# def transform_message_rcf(
+#     message: BasicInfoRequestMessage,
+#     features_encoders=features_encoders,
+#     numeric_scaler=numeric_scaler
+# ):
+#     dict_message = asdict(message)
+#     sample_vector = [
+#         dict_message['amt'],
+#         dict_message['lat'],
+#         dict_message['long'],
+#         dict_message['city_pop'],
+#         dict_message['merch_lat'],
+#         dict_message['merch_long']
+#     ]
+#     print("sample_vector", sample_vector)
     
-    # Convert numerical features
-    numerical_features = []
-    for feature in NUMERICAL_FEATURES:
-        numerical_features.append(dict_message[feature])
-    transformed_numerical_features = numeric_scaler.transform([numerical_features])[0]
-    for idx, feature in enumerate(NUMERICAL_FEATURES):
-        dict_message[feature] = transformed_numerical_features[idx]
+#     # Convert numerical features
+#     numerical_features = []
+#     for feature in NUMERICAL_FEATURES:
+#         numerical_features.append(dict_message[feature])
+#     transformed_numerical_features = numeric_scaler.transform([numerical_features])[0]
+#     for idx, feature in enumerate(NUMERICAL_FEATURES):
+#         dict_message[feature] = transformed_numerical_features[idx]
     
-    return BasicInfoRequestMessage(**dict_message)
+#     return BasicInfoRequestMessage(**dict_message)

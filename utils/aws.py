@@ -153,7 +153,7 @@ def ses_send_transaction_confirmation_mail(
     # )
     send_email_template(
         sender_email='millennium.ai.agent@gmail.com',
-        recipient_email='caohoangtung2001@gmail.com',
+        recipient_email=recipient_email,
         template_name='TransactionConfirmation',
         msg=msg
     )
