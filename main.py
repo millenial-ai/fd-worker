@@ -4,6 +4,10 @@ from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_trans
 from utils.CONST import XGB_FRAUD_THRESHOLD, RCF_FRAUD_THRESHOLD
 from utils.aws import create_ses_template
 
+from utils.processor import RCFProcessor, XGBProcessor
+from utils.message import PCARequestMessage, BasicInfoRequestMessage
+from utils.cw_logger import log
+            
 # Read AWS credentials from environment variables or AWS CLI configuration
 session = boto3.Session()
 
@@ -71,13 +75,9 @@ while True:
             # Delete the processed message from the queue
             receipt_handle = message['ReceiptHandle']
             
-            from utils.processor import RCFProcessor, XGBProcessor
-            from utils.message import PCARequestMessage, BasicInfoRequestMessage
-            
             # msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
             body_json = eval(message['Body'])
-            print("body_json", body_json)
-            print("body_json.get('recipient_email')", body_json.get('recipient_email'))
+            log(body_json)
             msg = BasicInfoRequestMessage(
                 identifier=body_json.get('identifier'), 
                 amt=body_json.get('amt'),
@@ -100,16 +100,18 @@ while True:
             )
             rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
             rcf_result = rcf_processor.process(msg)
-            print("RCF Result", rcf_result)
+            log("RCF Result:")
+            log(rcf_result)
             
             xgb_processor = XGBProcessor(endpoint_name=XGB_ENDPOINT, content_type='text/csv')
             xgb_result = xgb_processor.process(msg)
-            print("XGB Result", xgb_result)
+            log("XGB Result:")
+            log(xgb_result)
 
             sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
 
             if should_block_transaction(xgb_result, rcf_result):
-                print("BLOCK Mail is being sent to", msg.recipient_email)
+                log(f"BLOCK Mail is being sent to {msg.recipient_email}")
                 ses_send_transaction_blocked_mail(
                     msg=msg,
                     recipient_email=msg.recipient_email,
@@ -117,7 +119,7 @@ while True:
                     rcf_result=rcf_result.result
                 )
             elif should_send_mail(xgb_result, rcf_result):
-                print("YES/NO Mail is being sent to", msg.recipient_email)
+                log(f"YES/NO Mail is being sent to {msg.recipient_email}")
                 ses_send_transaction_confirmation_mail(
                     msg=msg,
                     recipient_email=msg.recipient_email,
@@ -125,6 +127,6 @@ while True:
                     rcf_result=rcf_result.result
                 )
             else:
-                print("Mail is NOT being sent")
+                log("Mail is NOT being sent")
     else:
         print("No messages available")
