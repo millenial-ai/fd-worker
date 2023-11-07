@@ -1,29 +1,31 @@
 #!/bin/bash
 
 # su ec2-user
-sudo pip3 install git-remote-codecommit
+pip3 install git-remote-codecommit
 
-# Check if the directory exists.
-if [ -d ~/fd-worker ]; then
-    # If the directory exists, clone the Git repository.
-    echo "Directory exists. Doing nothing"
-    sudo git pull
-else
-    # If the directory does not exist, you can choose to take some other action or simply ignore.
-    echo "Directory does not exist. Cloning repository..."
-    cd ~
-    sudo git clone codecommit::us-east-1://fd-worker
-    cd fd-worker
-    sudo chown -R ec2-user fd-worker 
-    echo "Git repository cloned successfully."
-fi
-cd ~/fd-worker
+cd ~/artifact-installation
+
+# # Check if the directory exists.
+# if [ -d ~/fd-worker ]; then
+#     # If the directory exists, clone the Git repository.
+#     echo "Directory exists. Doing nothing"
+#     sudo git pull
+# else
+#     # If the directory does not exist, you can choose to take some other action or simply ignore.
+#     echo "Directory does not exist. Cloning repository..."
+#     cd ~
+#     sudo git clone codecommit::us-east-1://fd-worker
+#     cd fd-worker
+#     sudo chown -R ec2-user fd-worker 
+#     echo "Git repository cloned successfully."
+# fi
+# cd ~/fd-worker
 pip3 install -r requirements.txt
 
 
 # Set the S3 bucket and folder path
 ARTIFACT_BUCKET=s3://fd-ml-artifacts
-LOCAL_DIR=~/fd-worker/resource/bin
+LOCAL_DIR=~/artifact-installation/resource/bin
 
 RCF_ARTIFACT_PATH="$ARTIFACT_BUCKET/rcf/"
 XGB_ARTIFACT_PATH="$ARTIFACT_BUCKET/xgb/"
