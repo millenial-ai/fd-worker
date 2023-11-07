@@ -7,6 +7,7 @@ sudo pip3 install git-remote-codecommit
 if [ -d ~/fd-worker ]; then
     # If the directory exists, clone the Git repository.
     echo "Directory exists. Doing nothing"
+    sudo git pull
 else
     # If the directory does not exist, you can choose to take some other action or simply ignore.
     echo "Directory does not exist. Cloning repository..."
