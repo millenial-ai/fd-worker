@@ -3,7 +3,7 @@
 # su ec2-user
 pip3 install git-remote-codecommit
 
-cd ~/artifact-installation
+cd ~/fd-worker
 
 # # Check if the directory exists.
 # if [ -d ~/fd-worker ]; then
@@ -25,7 +25,7 @@ pip3 install -r requirements.txt
 
 # Set the S3 bucket and folder path
 ARTIFACT_BUCKET=s3://fd-ml-artifacts
-LOCAL_DIR=~/artifact-installation/resource/bin
+LOCAL_DIR=~/fd-worker/resource/bin
 
 RCF_ARTIFACT_PATH="$ARTIFACT_BUCKET/rcf/"
 XGB_ARTIFACT_PATH="$ARTIFACT_BUCKET/xgb/"

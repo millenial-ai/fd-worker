@@ -3,7 +3,7 @@ export XGB_ENDPOINT=custom-nopca-datacamp-xgbsmote
 export SQS_NAME=FraudRequestQueue
 aws configure set region $(aws configure list | grep region | awk '{print $2}')
 
-cd ~/artifact-installation
+cd ~/fd-worker
 
 echo "Starting app"
 

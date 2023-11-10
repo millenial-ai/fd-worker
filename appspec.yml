@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ec2-user/artifact-installation
+    destination: /home/ec2-user/fd-worker
 permissions:
   - object: /home/ec2-user/fd-worker
     owner: ec2-user
