@@ -4,4 +4,4 @@ cd ~/fd-worker
 
 echo "Starting app"
 
-bash "run-${env:-production}.sh"
+nohup bash "run-${env:-production}.sh" > /dev/null 2>&1 &
