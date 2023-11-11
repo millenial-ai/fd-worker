@@ -4,6 +4,9 @@ import boto3
 from string import Template
 from .message import Message
 import json
+from sagemaker.feature_store.feature_group import FeatureGroup
+import sagemaker
+from sagemaker.feature_store.inputs import FeatureValue
 
 ses = boto3.client('ses')
 
@@ -174,3 +177,20 @@ def ses_send_transaction_blocked_mail(
         template_name='TransactionBlocked',
         msg=msg
     )
+
+def record_transaction_to_feature_store(feature_group_name, transaction_data):
+    sagemaker_session = sagemaker.Session()
+
+    record_to_ingest = [
+        FeatureValue(key, transaction_data[key])
+        for key in transaction_data
+    ]
+    
+    transactions_feature_group = FeatureGroup(name=feature_group_name, sagemaker_session=sagemaker_session)
+    
+    try:
+        transactions_feature_group.put_record(record_to_ingest)
+        print("Record put into Feature Store")
+    except Exception as e:
+        print(e)
+        print("Fail to put into Feature Store")

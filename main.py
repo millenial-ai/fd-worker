@@ -1,9 +1,10 @@
 import boto3
 import os
+from datetime import datetime
 from argparse import ArgumentParser
 from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_transaction_confirmation_mail, ses_send_transaction_blocked_mail
 from utils.CONST import XGB_FRAUD_THRESHOLD, RCF_FRAUD_THRESHOLD
-from utils.aws import create_ses_template
+from utils.aws import create_ses_template, record_transaction_to_feature_store
 
 from utils.processor import RCFProcessor, XGBProcessor
 from utils.message import PCARequestMessage, BasicInfoRequestMessage
@@ -41,6 +42,8 @@ def should_block_transaction(
 ):
     return xgb_result.result >= XGB_FRAUD_THRESHOLD and rcf_result.result >= RCF_FRAUD_THRESHOLD
 
+def str_to_iso_date(d: str):
+    return datetime.strptime(d, '%Y-%m-%d %H:%M:%S').isoformat() + 'Z'
 
 # Using same html on purpose
 with open('resource/mail_template/transaction_confirmation.html') as f_block,\
@@ -85,10 +88,10 @@ def main(args):
                     identifier=body_json.get('identifier'), 
                     amt=body_json.get('amt'),
                     lat=body_json.get('lat'),
-                    lng=body_json.get('lng'),
+                    long=body_json.get('long'),
                     city_pop=body_json.get('city_pop'),
                     merch_lat=body_json.get('merch_lat'),
-                    merch_lng=body_json.get('merch_lng'),
+                    merch_long=body_json.get('merch_long'),
                     merch_name=body_json.get('merch_name'),
                     tx_name=body_json.get('tx_name'),
                     tx_date=body_json.get('tx_date'),
@@ -134,6 +137,20 @@ def main(args):
                         )
                 else:
                     logger.log("Mail is NOT being sent")
+                
+                key_to_remove = ["identifier", "merch_name", "tx_date", "tx_name", "tx_ending", "recipient_email"]
+                
+
+                body_json["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
+                
+                body_json = {
+                    key: str(body_json[key])
+                    for key in body_json
+                    if key not in key_to_remove
+                }
+                import time
+                body_json["trans_num"] = str(int(time.time()))
+                record_transaction_to_feature_store('transactions-staging', body_json)
         else:
             print("No messages available")
 

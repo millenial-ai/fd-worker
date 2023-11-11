@@ -52,17 +52,20 @@ def rcf_pca_preprocess(message: Message):
     return json.dumps({"instances": [{"data": {"features": {"values": message.values}}}]})
 
 def rcf_preprocess(message: Message):
+    print(message)
     transformed_message = transform_message(message)
     dict_message = asdict(transformed_message)
 
+    print(transformed_message)
     feature_vector = [
         transformed_message.amt, 
         transformed_message.lat, 
-        transformed_message.lng, 
+        transformed_message.long, 
         transformed_message.city_pop, 
         transformed_message.merch_lat, 
-        transformed_message.merch_lng
+        transformed_message.merch_long
     ]
+    print('feature_vector', feature_vector)
     return json.dumps({"instances": [{"data": {"features": {"values": feature_vector}}}]})
     
 def rcf_postprocess(response):
@@ -101,10 +104,10 @@ def xgb_preprocess(message: Message):
     feature_vector = [
         transformed_message.amt, 
         transformed_message.lat, 
-        transformed_message.lng, 
+        transformed_message.long, 
         transformed_message.city_pop, 
         transformed_message.merch_lat, 
-        transformed_message.merch_lng,
+        transformed_message.merch_long,
         transformed_message.age,
         transformed_message.merchant,
         transformed_message.category,
