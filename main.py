@@ -2,6 +2,7 @@ import boto3
 import os
 from datetime import datetime
 from argparse import ArgumentParser
+import time
 from utils.aws import get_topic_arn_by_name, get_sqs_url_by_name, ses_send_transaction_confirmation_mail, ses_send_transaction_blocked_mail
 from utils.CONST import XGB_FRAUD_THRESHOLD, RCF_FRAUD_THRESHOLD
 from utils.aws import create_ses_template, record_transaction_to_feature_store
@@ -28,19 +29,22 @@ queue_url = get_sqs_url_by_name(SQS_NAME)
 # Initialize the SNS client
 sns = boto3.client('sns')
 
+def rcf_score_exceed_threshold(rcf_result):
+    return rcf_result.result >= RCF_FRAUD_THRESHOLD
+
 def should_send_mail(
     xgb_result,
     rcf_result,
     **kwargs
 ):
-    return xgb_result.result >= XGB_FRAUD_THRESHOLD or rcf_result.result >= RCF_FRAUD_THRESHOLD
+    return xgb_result.result >= XGB_FRAUD_THRESHOLD or rcf_score_exceed_threshold(rcf_result)
 
 def should_block_transaction(
     xgb_result,
     rcf_result,
     **kwargs
 ):
-    return xgb_result.result >= XGB_FRAUD_THRESHOLD and rcf_result.result >= RCF_FRAUD_THRESHOLD
+    return xgb_result.result >= XGB_FRAUD_THRESHOLD and rcf_score_exceed_threshold(rcf_result)
 
 def str_to_iso_date(d: str):
     return datetime.strptime(d, '%Y-%m-%d %H:%M:%S').isoformat() + 'Z'
@@ -65,6 +69,7 @@ with open('resource/mail_template/transaction_confirmation.html') as f_block,\
 
 def main(args):
     logger = CWLogger(env=args.env)
+    feature_group_name = os.environ.get('FEATURE_STORE_GROUP_NAME', f'transactions-{args.env}') 
     
     while True:
         response = sqs.receive_message(
@@ -140,17 +145,18 @@ def main(args):
                 
                 key_to_remove = ["identifier", "merch_name", "tx_date", "tx_name", "tx_ending", "recipient_email"]
                 
-
-                body_json["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
-                
-                body_json = {
+                record_to_ingest_feature_store = {
                     key: str(body_json[key])
                     for key in body_json
                     if key not in key_to_remove
                 }
-                import time
-                body_json["trans_num"] = str(int(time.time()))
-                record_transaction_to_feature_store('transactions-staging', body_json)
+                record_to_ingest_feature_store["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
+                record_to_ingest_feature_store["rcf_isfraud"] = '1' if rcf_score_exceed_threshold(rcf_result) else '0'
+                record_to_ingest_feature_store["rcf_score"] = str(rcf_result.result)
+                
+                record_to_ingest_feature_store["trans_num"] = str(int(time.time()))
+                
+                record_transaction_to_feature_store(feature_group_name, record_to_ingest_feature_store)
         else:
             print("No messages available")
 
