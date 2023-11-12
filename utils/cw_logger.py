@@ -33,7 +33,7 @@ class CWLogger():
             client.create_log_stream(logGroupName=self.log_group_name, logStreamName=self.log_stream_name)
     
     def is_production(self):
-        return self.env != 'production'
+        return self.env == 'production'
         
     def log(self, message, stdout=True):
         if stdout:
