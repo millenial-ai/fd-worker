@@ -9,7 +9,7 @@ client = boto3.client('logs')
 class CWLogger():
     def __init__(self, env):
         # Define the log group and log stream names
-        self.log_group_name = 'fd-worker'
+        self.log_group_name = f'fd-worker/{env}'
         self.log_stream_name = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
         self.env = env
         
@@ -38,9 +38,8 @@ class CWLogger():
     def log(self, message, stdout=True):
         if stdout:
             print(message)
-        if self.is_production():
-            client.put_log_events(
-                logGroupName=self.log_group_name,
-                logStreamName=self.log_stream_name,
-                logEvents=[{'timestamp': int(time.time() * 1000), 'message': str(message)}]
-            )
+        client.put_log_events(
+            logGroupName=self.log_group_name,
+            logStreamName=self.log_stream_name,
+            logEvents=[{'timestamp': int(time.time() * 1000), 'message': str(message)}]
+        )
