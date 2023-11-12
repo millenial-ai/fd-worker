@@ -17,8 +17,9 @@ hooks:
   BeforeInstall :
     - location: scripts/download_artifacts.sh
       runas: ec2-user
+  AfterInstall :
     - location: scripts/install-dependencies.sh
       runas: ec2-user
-  ApplicationStart:
+  ApplicationStart :
     - location: scripts/start_app.sh
       runas: ec2-user
