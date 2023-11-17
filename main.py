@@ -72,93 +72,97 @@ def main(args):
     feature_group_name = os.environ.get('FEATURE_STORE_GROUP_NAME', f'transactions-{args.env}') 
     
     while True:
-        response = sqs.receive_message(
-            QueueUrl=queue_url,
-            MaxNumberOfMessages=1,  # Change as needed
-            WaitTimeSeconds=10      # Change as needed
-        )
-    
-        if 'Messages' in response:
-            for message in response['Messages']:
-                # Process the message
-                print("Received Message:", message['Body'], type(message['Body']))
-    
-                # Delete the processed message from the queue
-                receipt_handle = message['ReceiptHandle']
-                
-                # msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
-                body_json = eval(message['Body'])
-                logger.log(body_json)
-                msg = BasicInfoRequestMessage(
-                    identifier=body_json.get('identifier'), 
-                    amt=body_json.get('amt'),
-                    lat=body_json.get('lat'),
-                    long=body_json.get('long'),
-                    city_pop=body_json.get('city_pop'),
-                    merch_lat=body_json.get('merch_lat'),
-                    merch_long=body_json.get('merch_long'),
-                    merch_name=body_json.get('merch_name'),
-                    tx_name=body_json.get('tx_name'),
-                    tx_date=body_json.get('tx_date'),
-                    tx_ending=body_json.get('tx_ending'),
-                    merchant=body_json.get('merchant'), 
-                    category=body_json.get('category'),
-                    city=body_json.get('city'),
-                    state=body_json.get('state'),
-                    dob=body_json.get('dob'),
-                    job=body_json.get('job'),
-                    recipient_email=body_json.get('recipient_email')
-                )
-                rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
-                rcf_result = rcf_processor.process(msg)
-                logger.log("RCF Result:")
-                logger.log(rcf_result)
-                
-                xgb_processor = XGBProcessor(endpoint_name=XGB_ENDPOINT, content_type='text/csv')
-                xgb_result = xgb_processor.process(msg)
-                logger.log("XGB Result:")
-                logger.log(xgb_result)
-    
-                sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
-    
-                if should_block_transaction(xgb_result, rcf_result):
-                    logger.log(f"BLOCK Mail is being sent to {msg.recipient_email}")
+        try:
+            response = sqs.receive_message(
+                QueueUrl=queue_url,
+                MaxNumberOfMessages=1,  # Change as needed
+                WaitTimeSeconds=10      # Change as needed
+            )
+            if 'Messages' in response:
+                for message in response['Messages']:
+                    # Process the message
+                    print("Received Message:", message['Body'], type(message['Body']))
+        
+                    # Delete the processed message from the queue
+                    receipt_handle = message['ReceiptHandle']
                     
-                    if not args.disable_mail_alert:
-                        ses_send_transaction_blocked_mail(
-                            msg=msg,
-                            recipient_email=msg.recipient_email,
-                            xgb_result=xgb_result.result,
-                            rcf_result=rcf_result.result
-                        )
-                elif should_send_mail(xgb_result, rcf_result):
-                    logger.log(f"YES/NO Mail is being sent to {msg.recipient_email}")
-                    if not args.disable_mail_alert:
-                        ses_send_transaction_confirmation_mail(
-                            msg=msg,
-                            recipient_email=msg.recipient_email,
-                            xgb_result=xgb_result.result,
-                            rcf_result=rcf_result.result
-                        )
-                else:
-                    logger.log("Mail is NOT being sent")
-                
-                key_to_remove = ["identifier", "merch_name", "tx_date", "tx_name", "tx_ending", "recipient_email"]
-                
-                record_to_ingest_feature_store = {
-                    key: str(body_json[key])
-                    for key in body_json
-                    if key not in key_to_remove
-                }
-                record_to_ingest_feature_store["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
-                record_to_ingest_feature_store["rcf_isfraud"] = '1' if rcf_score_exceed_threshold(rcf_result) else '0'
-                record_to_ingest_feature_store["rcf_score"] = str(rcf_result.result)
-                
-                record_to_ingest_feature_store["trans_num"] = str(int(time.time()))
-                
-                record_transaction_to_feature_store(feature_group_name, record_to_ingest_feature_store)
-        else:
-            print("No messages available")
+                    # msg = PCARequestMessage(identifier=eval(message['Body'])['identifier'], values=eval(message['Body'])['pca'])
+                    body_json = eval(message['Body'])
+                    logger.log(body_json)
+                    msg = BasicInfoRequestMessage(
+                        identifier=body_json.get('identifier'), 
+                        amt=body_json.get('amt'),
+                        lat=body_json.get('lat'),
+                        long=body_json.get('long'),
+                        city_pop=body_json.get('city_pop'),
+                        merch_lat=body_json.get('merch_lat'),
+                        merch_long=body_json.get('merch_long'),
+                        merch_name=body_json.get('merch_name'),
+                        tx_name=body_json.get('tx_name'),
+                        tx_date=body_json.get('tx_date'),
+                        tx_ending=body_json.get('tx_ending'),
+                        merchant=body_json.get('merchant'), 
+                        category=body_json.get('category'),
+                        city=body_json.get('city'),
+                        state=body_json.get('state'),
+                        dob=body_json.get('dob'),
+                        job=body_json.get('job'),
+                        recipient_email=body_json.get('recipient_email')
+                    )
+                    rcf_processor = RCFProcessor(endpoint_name=RCF_ENDPOINT)
+                    rcf_result = rcf_processor.process(msg)
+                    logger.log("RCF Result:")
+                    logger.log(rcf_result)
+                    
+                    xgb_processor = XGBProcessor(endpoint_name=XGB_ENDPOINT, content_type='text/csv')
+                    xgb_result = xgb_processor.process(msg)
+                    logger.log("XGB Result:")
+                    logger.log(xgb_result)
+                    
+                    sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
+                    logger.log("Deleted message from SQS")
+                    
+                    if should_block_transaction(xgb_result, rcf_result):
+                        logger.log(f"BLOCK Mail is being sent to {msg.recipient_email}")
+                        
+                        if not args.disable_mail_alert:
+                            ses_send_transaction_blocked_mail(
+                                msg=msg,
+                                recipient_email=msg.recipient_email,
+                                xgb_result=xgb_result.result,
+                                rcf_result=rcf_result.result
+                            )
+                    elif should_send_mail(xgb_result, rcf_result):
+                        logger.log(f"YES/NO Mail is being sent to {msg.recipient_email}")
+                        if not args.disable_mail_alert:
+                            ses_send_transaction_confirmation_mail(
+                                msg=msg,
+                                recipient_email=msg.recipient_email,
+                                xgb_result=xgb_result.result,
+                                rcf_result=rcf_result.result
+                            )
+                    else:
+                        logger.log("Mail is NOT being sent")
+                    
+                    key_to_remove = ["identifier", "merch_name", "tx_date", "tx_name", "tx_ending", "recipient_email"]
+                    
+                    record_to_ingest_feature_store = {
+                        key: str(body_json[key])
+                        for key in body_json
+                        if key not in key_to_remove
+                    }
+                    record_to_ingest_feature_store["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
+                    record_to_ingest_feature_store["rcf_isfraud"] = '1' if rcf_score_exceed_threshold(rcf_result) else '0'
+                    record_to_ingest_feature_store["rcf_score"] = str(rcf_result.result)
+                    
+                    record_to_ingest_feature_store["trans_num"] = str(int(time.time()))
+                    logger.log("Logging record to Feature Store")
+                    record_transaction_to_feature_store(feature_group_name, record_to_ingest_feature_store)
+            else:
+                print("No messages available")
+        except Exception as e:
+            logger.log(f"Got error while handling message: {e}")
+            logger.log(f"Skipping.")
 
 if __name__ == "__main__":
     parser = ArgumentParser()
