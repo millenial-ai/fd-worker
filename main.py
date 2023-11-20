@@ -10,7 +10,8 @@ from utils.aws import create_ses_template, record_transaction_to_feature_store
 from utils.processor import RCFProcessor, XGBProcessor
 from utils.message import PCARequestMessage, BasicInfoRequestMessage
 from utils.cw_logger import CWLogger
-            
+from utils.transform import date_to_part_of_day, dob_to_age
+
 # Read AWS credentials from environment variables or AWS CLI configuration
 session = boto3.Session()
 
@@ -153,8 +154,11 @@ def main(args):
                         if key not in key_to_remove
                     }
                     record_to_ingest_feature_store["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
+                    record_to_ingest_feature_store["part_of_day"] = date_to_part_of_day(body_json["tx_date"])
+                    record_to_ingest_feature_store["age"] = dob_to_age(body_json["dob"])
                     record_to_ingest_feature_store["rcf_isfraud"] = '1' if rcf_score_exceed_threshold(rcf_result) else '0'
                     record_to_ingest_feature_store["rcf_score"] = str(rcf_result.result)
+                    record_to_ingest_feature_store["xgb_isfraud"] = str(xgb_result.result)
                     
                     record_to_ingest_feature_store["trans_num"] = str(int(time.time()))
                     logger.log("Logging record to Feature Store")
