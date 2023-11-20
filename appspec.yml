@@ -20,6 +20,8 @@ hooks:
   AfterInstall :
     - location: scripts/install-dependencies.sh
       runas: ec2-user
+    - location: scripts/stop_app.sh
+      runas: ec2-user
   ApplicationStart :
     - location: scripts/start_app.sh
       runas: ec2-user
