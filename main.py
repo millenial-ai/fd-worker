@@ -122,27 +122,28 @@ def main(args):
                     sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
                     logger.log("Deleted message from SQS")
                     
-                    if should_block_transaction(xgb_result, rcf_result):
-                        logger.log(f"BLOCK Mail is being sent to {msg.recipient_email}")
-                        
-                        if not args.disable_mail_alert:
+                    
+                    if args.disable_mail_alert or msg.recipient_email is None:
+                        logger.log("Mail is disabled")
+                    else:
+                        if should_block_transaction(xgb_result, rcf_result):
+                            logger.log(f"BLOCK Mail is being sent to {msg.recipient_email}")
                             ses_send_transaction_blocked_mail(
                                 msg=msg,
                                 recipient_email=msg.recipient_email,
                                 xgb_result=xgb_result.result,
                                 rcf_result=rcf_result.result
                             )
-                    elif should_send_mail(xgb_result, rcf_result):
-                        logger.log(f"YES/NO Mail is being sent to {msg.recipient_email}")
-                        if not args.disable_mail_alert:
+                        elif should_send_mail(xgb_result, rcf_result):
+                            logger.log(f"YES/NO Mail is being sent to {msg.recipient_email}")
                             ses_send_transaction_confirmation_mail(
                                 msg=msg,
                                 recipient_email=msg.recipient_email,
                                 xgb_result=xgb_result.result,
                                 rcf_result=rcf_result.result
                             )
-                    else:
-                        logger.log("Mail is NOT being sent")
+                        else:
+                            logger.log("Mail is NOT being sent")
                     
                     key_to_remove = ["identifier", "merch_name", "tx_date", "tx_name", "tx_ending", "recipient_email"]
                     
