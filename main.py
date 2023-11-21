@@ -32,6 +32,9 @@ sns = boto3.client('sns')
 
 def rcf_score_exceed_threshold(rcf_result):
     return rcf_result.result >= RCF_FRAUD_THRESHOLD
+    
+def xgb_score_exceed_threshold(xgb_result):
+    return xgb_result.result >= XGB_FRAUD_THRESHOLD
 
 def should_send_mail(
     xgb_result,
@@ -154,11 +157,12 @@ def main(args):
                         if key not in key_to_remove
                     }
                     record_to_ingest_feature_store["trans_date_trans_time"] = str_to_iso_date(body_json["tx_date"])
-                    record_to_ingest_feature_store["part_of_day"] = date_to_part_of_day(body_json["tx_date"])
-                    record_to_ingest_feature_store["age"] = dob_to_age(body_json["dob"])
+                    # record_to_ingest_feature_store["part_of_day"] = date_to_part_of_day(body_json["tx_date"])
+                    # record_to_ingest_feature_store["age"] = str(dob_to_age(body_json["dob"]))
                     record_to_ingest_feature_store["rcf_isfraud"] = '1' if rcf_score_exceed_threshold(rcf_result) else '0'
                     record_to_ingest_feature_store["rcf_score"] = str(rcf_result.result)
-                    record_to_ingest_feature_store["xgb_isfraud"] = str(xgb_result.result)
+                    record_to_ingest_feature_store["xgb_score"] = str(xgb_result.result)
+                    record_to_ingest_feature_store["xgb_isfraud"] = '1' if xgb_score_exceed_threshold(xgb_result) else '0'
                     
                     record_to_ingest_feature_store["trans_num"] = str(int(time.time()))
                     logger.log("Logging record to Feature Store")
