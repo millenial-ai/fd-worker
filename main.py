@@ -49,6 +49,30 @@ def should_block_transaction(
 def str_to_iso_date(d: str):
     return datetime.strptime(d, '%Y-%m-%d %H:%M:%S').isoformat() + 'Z'
 
+def save_to_dynamodb(identifier, status):
+    # Create a DynamoDB resource
+    dynamodb = boto3.resource('dynamodb')
+    
+    # Specify the table name
+    table_name = 'transaction_status'
+    
+    # Access the DynamoDB table
+    table = dynamodb.Table(table_name)
+    
+    # Define the item to be written to DynamoDB
+    item_to_write = {
+        'identifier': identifier,
+        'status': status
+        # Add more attributes as needed
+    }
+    
+    # Write the item to DynamoDB
+    response = table.put_item(Item=item_to_write)
+    
+    # Print the response
+    print("Item added successfully:", response)
+
+
 # Using same html on purpose
 with open('resource/mail_template/transaction_confirmation.html') as f_block,\
     open('resource/mail_template/transaction_confirmation.html') as f_confirm:
@@ -122,6 +146,7 @@ def main(args):
                     sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
                     logger.log("Deleted message from SQS")
                     
+                    unique_id = f"{msg.identifier}/{msg.tx_date}"
                     if should_block_transaction(xgb_result, rcf_result):
                         logger.log(f"BLOCK Mail is being sent to {msg.recipient_email}")
                         
@@ -132,6 +157,7 @@ def main(args):
                                 xgb_result=xgb_result.result,
                                 rcf_result=rcf_result.result
                             )
+                            save_to_dynamodb(unique_id, 'fraud')
                     elif should_send_mail(xgb_result, rcf_result):
                         logger.log(f"YES/NO Mail is being sent to {msg.recipient_email}")
                         if not args.disable_mail_alert:
@@ -141,9 +167,12 @@ def main(args):
                                 xgb_result=xgb_result.result,
                                 rcf_result=rcf_result.result
                             )
+                            save_to_dynamodb(unique_id, 'fraud')
+                        
                     else:
                         logger.log("Mail is NOT being sent")
-                    
+                        save_to_dynamodb(unique_id, 'not_fraud')
+                        
                     key_to_remove = ["identifier", "merch_name", "tx_date", "tx_name", "tx_ending", "recipient_email"]
                     
                     record_to_ingest_feature_store = {
